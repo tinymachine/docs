@@ -165,11 +165,72 @@ export function onTap(args: EventData) {
 
 ![navigation-schema-lateral](../img/navigation/navigation-schema-lateral.png?raw=true)
 
-Implementing lateral navigation in NativeScript means to incorporate several instances of the `Frame` component in your navigation and provide means to the user to switch between them. This is usually enabled through specific navigation components. These include `TabView`, `SideDrawer` and `Modal View`, each providing a unique mobile navigation pattern.
+Implementing lateral navigation in NativeScript usually means to incorporate several instances of the `Frame` component in your navigation and provide means to the user to switch between them. This is usually enabled through specific navigation components. These include `TabView`, `SideDrawer`, `Modal View`, and even `Frame` each providing a unique mobile navigation pattern.
 
-### Modal View
+### Hub Navigation
 
-Opening a new `Frame` as a full screen modal view is the simplest way to implement lateral navigation. In this context opening the modal view represents lateral navigation to a new feature. You can then leverage the embedded `Frame` to navigate forward and backward in this feature. Closing the modal will navigate laterally back to where the modal view was opened from. Below is a diagram that displays how the navigation schema can be implemented using modal views.
+The most simple and straight forward way to implement lateral navigation is the hub navigation pattern. It consists of a screen, called a hub, that holds navigation buttons leading to different features. In essence, this pattern uses the same mechanism of forward navigation for lateral navigation. In NativeScript you can implement this with a `Frame` and have one `Page` serve as the hub screen.
+
+![navigation-diagram-hub](../img/navigation/navigation-diagram-hub.png?raw=true)
+
+TODO: Add code sample
+
+TODO: Add playground demo
+
+### TabView Navigation
+
+The `TabView` component enables the user to arbitrarily navigate between several UI containers at the same level. A key feature of this component is that it keeps the state of the containers that are not visible. This means that when the user comes back to a previous tab, the data, scroll position and navigation state should be like they left them. Here is a diagram that demonstrates how the navigation schema can be implemented with a `TabView`.
+
+![navigation-diagram-tab](../img/navigation/navigation-diagram-tab.png?raw=true)
+
+The `TabView` container provides its lateral navigation logic automatically by providing the user with tabs which they can select. To set up a `TabView` you need to simply declare the UI of each container and the title and icon you want to be shown in its representing tab. Each separate UI container is represented by a `TabViewItem`. A `TabViewItem` can have one root component. As with other containers, you can enable forward and backward navigation inside each `TabViewItem` by embedding a `Frame` in it.
+
+The `TabView` provides two important features connected to lateral navigation:
+
+* [selectedIndex](https://docs.nativescript.org/api-reference/classes/_ui_tab_view_.tabview#selectedindex) property - use this property to programmatically navigate between the tabs.
+* [selectedIndexChanged](https://docs.nativescript.org/api-reference/classes/_ui_tab_view_.tabview#selectedindexchangedevent) event - use this event to handle navigations between tabs done by the user.
+
+Check out the [TabView]({%slug tab-view %}) article for a more detailed look on how you can use and customize the component.
+
+Here is a code sample of the `TabView` declaration that matches the diagram above. Check out the complete playground demo below the code sample.
+
+```XML
+<!-- app-root.xml -->
+<TabView androidTabsPosition="bottom" selectedIndex="0" selectedIndexChanged="onSelectedIndexChanged">
+    <TabViewItem title="Featured">
+        <Frame id="featured" defaultPage="featured-page" />
+    </TabViewItem>
+    <TabViewItem title="Browse">
+        <Frame id="browse" defaultPage="browse-page" />
+    </TabViewItem>
+    <TabViewItem title="Search">
+        <Frame id="search" defaultPage="search-page" />
+    </TabViewItem>
+</TabView>
+```
+``` JavaScript
+// app-root.js
+function onSelectedIndexChanged(args) {
+    console.log(`Selected index has changed ( Old index: ${args.oldIndex} New index: ${args.newIndex} )`);
+}
+exports.onSelectedIndexChanged = onSelectedIndexChanged;
+```
+``` TypeScript
+// app-root.ts
+import { SelectedIndexChangedEventData } from "tns-core-modules/ui/tab-view";
+
+export function onSelectedIndexChanged(args: SelectedIndexChangedEventData) {
+    console.log(`Selected index has changed ( Old index: ${args.oldIndex} New index: ${args.newIndex} )`);
+}
+```
+
+[Playground Demo](https://play.nativescript.org/?template=play-tsc&id=q8XZfS&v=4)
+
+> **Note:** In the current scenario the Search feature has only one page and it's possible to implement it directly in the `TabViewItem` without embedding a `Frame`. However, in this case there won't be a navigation controller in the `TabViewItem` and therefore, no `ActionBar`. 
+
+### Modal View Navigation
+
+Opening a new `Frame` as a full screen modal view is a very common mobile navigation pattern. In this context opening the modal view represents lateral navigation to a new feature. You can then leverage the embedded `Frame` to navigate forward and backward in this feature. Closing the modal will navigate laterally back to where the modal view was opened from. Below is a diagram that displays how the navigation schema can be implemented using modal views.
 
 > **Note:** Unlike the `TabView` component, the state of the modal view isn't kept when navigating away, i.e. closing the modal.
 
@@ -259,57 +320,6 @@ export function closeModal(args: EventData) {
 
 > **Note:** In the current scenario the Search feature has only one page and it's possible to implement it directly in the modal view without embedding a `Frame` in `search-root`. However, in this case there won't be a navigation controller in the modal view and therefore, no `ActionBar`. 
 
-### TabView Navigation
-
-The `TabView` component enables the user to arbitrarily navigate between several UI containers at the same level. A key feature of this component is that it keeps the state of the containers that are not visible. This means that when the user comes back to a previous tab, the data, scroll position and navigation state should be like they left them. Here is a diagram that demonstrates how the navigation schema can be implemented with a `TabView`.
-
-![navigation-diagram-tab](../img/navigation/navigation-diagram-tab.png?raw=true)
-
-The `TabView` container provides its lateral navigation logic automatically by providing the user with tabs which they can select. To set up a `TabView` you need to simply declare the UI of each container and the title and icon you want to be shown in its representing tab. Each separate UI container is represented by a `TabViewItem`. A `TabViewItem` can have one root component. As with other containers, you can enable forward and backward navigation inside each `TabViewItem` by embedding a `Frame` in it.
-
-The `TabView` provides two important features connected to lateral navigation:
-
-* [selectedIndex](https://docs.nativescript.org/api-reference/classes/_ui_tab_view_.tabview#selectedindex) property - use this property to programmatically navigate between the tabs.
-* [selectedIndexChanged](https://docs.nativescript.org/api-reference/classes/_ui_tab_view_.tabview#selectedindexchangedevent) event - use this event to handle navigations between tabs done by the user.
-
-Check out the [TabView]({%slug tab-view %}) article for a more detailed look on how you can use and customize the component.
-
-Here is a code sample of the `TabView` declaration that matches the diagram above. Check out the complete playground demo below the code sample.
-
-```XML
-<!-- app-root.xml -->
-<TabView androidTabsPosition="bottom" selectedIndex="0" selectedIndexChanged="onSelectedIndexChanged">
-    <TabViewItem title="Featured">
-        <Frame id="featured" defaultPage="featured-page" />
-    </TabViewItem>
-    <TabViewItem title="Browse">
-        <Frame id="browse" defaultPage="browse-page" />
-    </TabViewItem>
-    <TabViewItem title="Search">
-        <Frame id="search" defaultPage="search-page" />
-    </TabViewItem>
-</TabView>
-```
-``` JavaScript
-// app-root.js
-function onSelectedIndexChanged(args) {
-    console.log(`Selected index has changed ( Old index: ${args.oldIndex} New index: ${args.newIndex} )`);
-}
-exports.onSelectedIndexChanged = onSelectedIndexChanged;
-```
-``` TypeScript
-// app-root.ts
-import { SelectedIndexChangedEventData } from "tns-core-modules/ui/tab-view";
-
-export function onSelectedIndexChanged(args: SelectedIndexChangedEventData) {
-    console.log(`Selected index has changed ( Old index: ${args.oldIndex} New index: ${args.newIndex} )`);
-}
-```
-
-[Playground Demo](https://play.nativescript.org/?template=play-tsc&id=q8XZfS&v=4)
-
-> **Note:** In the current scenario the Search feature has only one page and it's possible to implement it directly in the `TabViewItem` without embedding a `Frame`. However, in this case there won't be a navigation controller in the `TabViewItem` and therefore, no `ActionBar`. 
-
 ### SideDrawer Navigation
 
 The `SideDrawer` component is part of the [Professional UI Components]({%slug rich-components %}) suite. It enables the user to open a hidden view, i.e. drawer, containing navigation controls, or settings from the sides of the screen. There are a lot of navigation patterns that can be implemented using a `SideDrawer`. A typical usage would be to add UI controls and have them do one of two things:
@@ -317,13 +327,21 @@ The `SideDrawer` component is part of the [Professional UI Components]({%slug ri
 * Forward navigation - get a reference to a navigation `Frame` and navigate in it.
 * Lateral navigation - open a modal view.
 
-Below is a diagram of how you can implement the navigation schema using a `SideDrawer`.
+The simplest navigation pattern that you can implement is again the hub navigation pattern, but this time with the `SideDrawer` serving as the hub.
+
+![navigation-diagram-drawer-hub](../img/navigation/navigation-diagram-drawer-hub.png?raw=true)
+
+The component itself doesn't provide navigation logic automatically like the `TabView`. Instead, it is built with more freedom in mind and lets you customize its content. It exposes two UI containers - the `drawerContent` container houses the UI of the hidden side view and the `mainContent` holds the UI that will be shown on the screen. To implement the diagram above, we will embed a `Frame` component in the main content container. In this case the hub screen will be hidden to the side, so we will have to show one of the features initially using the `defaultPage` property. We will show the `featured-page` module. In the hidden drawer content we will have three buttons. Each of them will navigate to one of the three features. Check out the complete playground demo below the code sample.
+
+TODO: Add code sample
+
+TODO: Add Playground
+
+> **Note:** To implement the lateral navigation schema correctly in this case, we had to navigate to each side feature using the `clearHistory` option. This is to ensure that there will be no forward and backward navigation between features.
+
+An alternative navigation pattern for the `SideDrawer` would be to have the main content hold only one feature and navigate to the other two laterally using modal views. See the playground demo below the code sample for complete example.
 
 ![navigation-diagram-drawer](../img/navigation/navigation-diagram-drawer.png?raw=true)
-
-A notable bonus of the component is that the drawer can be opened regardless of the navigation state of the main content. This means that the user can navigate laterally to another feature from either the Featured page or the Item page.
-
-The component itself doesn't provide navigation logic automatically like the `TabView`. Instead, it is built with more freedom in mind and lets you customize its content. It exposes two UI containers - the `drawerContent` container houses the UI of the hidden side view and the `mainContent` holds the UI that will be shown on the screen. To implement the diagram above, we will embed a `Frame` component holding the Featured navigation in the main content container and three buttons in the drawer content. Two of them open the Browse and Search features in modal views and the final one resets the embedded Featured navigation. Check out the complete playground demo below the code sample.
 
 ```XML
 <!-- app-root.xml -->
